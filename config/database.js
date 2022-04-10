@@ -1,18 +1,43 @@
-module.exports = ({ env }) => ({
-  defaultConnection: 'default',
-  connections: {
-    default: {
-      connector: 'bookshelf',
-      settings: {
-        client: 'sqlite',
-        filename: env('DATABASE_FILENAME', '.tmp/data.db'),
+const parse = require('pg-connection-string').parse;
+
+if (process.env.NODE_ENV === 'production') {
+  const config = parse(process.env.DATABASE_URL);
+  module.exports = ({ env }) => ({
+    connection: {
+      client: 'postgres',
+      connection: {
+        host: config.host,
+        port: config.port,
+        database: config.database,
+        user: config.user,
+        password: config.password,
+        ssl: {
+          rejectUnauthorized: false
+        },
       },
-      options: {
-        useNullAsDefault: true,
+      debug: false,
+    },
+  });
+
+} else {
+  module.exports = ({ env }) => ({
+    defaultConnection: 'default',
+    connections: {
+      default: {
+        connector: 'bookshelf',
+        settings: {
+          client: 'sqlite',
+          filename: env('DATABASE_FILENAME', '.tmp/data.db'),
+        },
+        options: {
+          useNullAsDefault: true,
+        },
       },
     },
-  },
-});
+  });
+}
+
+
 
 // if (process.env.NODE_ENV === 'development') {
 //   module.exports = ({ env }) => ({
@@ -43,9 +68,9 @@ module.exports = ({ env }) => ({
   //         database: process.env.DATABASE_NAME,
   //         username: process.env.DATABASE_USERNAME,
   //         password: process.env.DATABASE_PASSWORD,
-  //         ssl: { 
-  //           rejectUnauthorized: false 
-  //         } 
+  //         ssl: {
+  //           rejectUnauthorized: false
+  //         }
   //       },
   //       options: {}
   //     }
